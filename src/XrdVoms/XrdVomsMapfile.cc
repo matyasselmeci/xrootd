@@ -79,7 +79,12 @@ XrdVomsMapfile::XrdVomsMapfile(XrdSysError *erp,
     }
     memcpy(&m_mapfile_ctime, &statbuf.st_ctim, sizeof(decltype(m_mapfile_ctime)));
 
-    if (!ParseMapfile(m_mapfile)) {return;}
+    if (!ParseMapfile(m_mapfile)) {
+        m_edest->Emsg("XrdVomsMapfile", "Parsing voms mapfile failed; not going to try again");
+        return;
+    } else {
+        m_edest->Log(LogMask::Debug, "XrdVomsMapfile", "Parsing voms mapfile succeeded");
+    }
 
     pthread_t tid;
     auto rc = XrdSysThread::Run(&tid, XrdVomsMapfile::MaintenanceThread,
@@ -87,6 +92,8 @@ XrdVomsMapfile::XrdVomsMapfile(XrdSysError *erp,
     if (rc) {
         m_edest->Emsg("XrdVomsMapfile", "Failed to launch VOMS mapfile monitoring thread");
         return;
+    } else {
+        m_edest->Log(LogMask::Debug, "XrdVomsMapfile", "VOMS mapfile monitoring thread launched");
     }
     m_is_valid = true;
 }
@@ -114,6 +121,9 @@ XrdVomsMapfile::ParseMapfile(const std::string &mapfile)
             entries->emplace_back(entry);
         }
     }
+    std::stringstream ss;
+    ss << "Parsed " << entries->size() << " entries from file " << mapfile;
+    m_edest->Log(LogMask::Debug, "ParseMapfile", ss.str().c_str());
     m_entries = entries;
     return true;
 }
@@ -197,7 +207,10 @@ std::string
 XrdVomsMapfile::Map(const std::vector<string> &fqan)
 {
     decltype(m_entries) entries = m_entries;
-    if (!entries) {return "";}
+    if (!entries) {
+        m_edest->Log(LogMask::Debug, "VOMSMapfile", "No entries; can't map.");
+        return "";
+    }
 
     if (m_edest && (m_edest->getMsgMask() & LogMask::Debug)) {
         m_edest->Log(LogMask::Debug, "VOMSMapfile", "Mapping VOMS FQAN", PathToString(fqan).c_str());
@@ -382,6 +395,11 @@ XrdVomsMapfile::MaintenanceThread(void *myself_raw)
 
    auto now = monotonic_time_s();
    auto next_update = now + m_update_interval;
+
+   std::stringstream ss;
+   ss << "Started XrdVomsMapfile::MaintenanceThread at " << now << "; next update at " << next_update;
+   myself->m_edest->Log(LogMask::Debug, "Maintenance", ss.str().c_str());
+
    while (true) {
        now = monotonic_time_s();
        auto remaining = next_update - now;
