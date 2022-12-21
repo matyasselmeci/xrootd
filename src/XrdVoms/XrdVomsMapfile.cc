@@ -87,13 +87,18 @@ XrdVomsMapfile::XrdVomsMapfile(XrdSysError *erp,
     }
 
     pthread_t tid;
-    auto rc = XrdSysThread::Run(&tid, XrdVomsMapfile::MaintenanceThread,
-                                static_cast<void*>(this), 0, "VOMS Mapfile refresh");
-    if (rc) {
-        m_edest->Emsg("XrdVomsMapfile", "Failed to launch VOMS mapfile monitoring thread");
-        return;
-    } else {
-        m_edest->Log(LogMask::Debug, "XrdVomsMapfile", "VOMS mapfile monitoring thread launched");
+    try {
+        auto rc = XrdSysThread::Run(&tid, XrdVomsMapfile::MaintenanceThread,
+                                    static_cast<void*>(this), 0, "VOMS Mapfile refresh");
+        if (rc) {
+            m_edest->Emsg("XrdVomsMapfile", "Failed to launch VOMS mapfile monitoring thread");
+            return;
+        } else {
+            m_edest->Log(LogMask::Debug, "XrdVomsMapfile", "VOMS mapfile monitoring thread launched");
+        }
+    } catch (const std::exception& e) {
+        m_edest->Emsg("XrdVomsMapfile", "Launch of VOMS mapfile monitoring thread died with exception", e.what());
+        throw;
     }
     m_is_valid = true;
 }
