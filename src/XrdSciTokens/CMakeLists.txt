@@ -58,6 +58,7 @@ target_link_libraries(${XrdAccSciTokens}
 install(
   TARGETS
     ${XrdAccSciTokens}
+    XrdSciTokensObj
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
