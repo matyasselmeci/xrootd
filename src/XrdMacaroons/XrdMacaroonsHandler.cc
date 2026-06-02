@@ -1,21 +1,24 @@
-#include "XrdMacaroonsHandler.hh"
-
-#include "XrdAcc/XrdAccAuthorize.hh"
-#include "XrdAcc/XrdAccPrivs.hh"
-#include "XrdOuc/XrdOucTUtils.hh"
-#include "XrdSec/XrdSecEntity.hh"
-#include "XrdSys/XrdSysError.hh"
 
 #include <cstring>
+#include <string>
 #include <iostream>
 #include <sstream>
-#include <string>
 
-#include <json.h>
-#include <macaroons.h>
 #include <uuid/uuid.h>
+#include "json.h"
+#include "macaroons.h"
+
+#include "XrdAcc/XrdAccPrivs.hh"
+#include "XrdAcc/XrdAccAuthorize.hh"
+#include "XrdSys/XrdSysError.hh"
+#include "XrdSec/XrdSecEntity.hh"
+
+#include "XrdMacaroonsHandler.hh"
+
+#include "XrdOuc/XrdOucTUtils.hh"
 
 using namespace Macaroons;
+
 
 char *unquote(const char *str) {
   int l = strlen(str);
@@ -49,6 +52,7 @@ char *unquote(const char *str) {
   return r;
 
 }
+
 
 std::string Macaroons::NormalizeSlashes(const std::string &input)
 {
@@ -128,6 +132,7 @@ ssize_t determine_validity(const std::string& input)
     return duration;
 }
 
+
 Handler::~Handler()
 {
     delete m_chain;
@@ -179,6 +184,7 @@ if (m_log->getMsgMask() & LogMask::Debug)
     return result;
 }
 
+
 std::string
 Handler::GenerateActivities(const XrdHttpExtReq & req, const std::string &resource) const
 {
@@ -193,6 +199,7 @@ Handler::GenerateActivities(const XrdHttpExtReq & req, const std::string &resour
     return result;
 }
 
+
 // See if the macaroon handler is interested in this request.
 // We intercept all POST requests as we will be looking for a particular
 // header.
@@ -202,6 +209,7 @@ Handler::MatchesPath(const char *verb, const char *path)
     return !strcmp(verb, "POST") || !strncmp(path, "/.well-known/", 13) ||
            !strncmp(path, "/.oauth2/", 9);
 }
+
 
 int Handler::ProcessOAuthConfig(XrdHttpExtReq &req) {
     if (req.verb != "GET")
@@ -233,6 +241,7 @@ int Handler::ProcessOAuthConfig(XrdHttpExtReq &req) {
     json_object_put(response_obj);
     return retval;
 }
+
 
 int Handler::ProcessTokenRequest(XrdHttpExtReq &req)
 {
@@ -351,6 +360,7 @@ int Handler::ProcessTokenRequest(XrdHttpExtReq &req)
     }
     return GenerateMacaroonResponse(req, path, other_caveats_final, validity, true);
 }
+
 
 // Process a macaroon request.
 int Handler::ProcessReq(XrdHttpExtReq &req)

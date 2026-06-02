@@ -1,15 +1,18 @@
-#include "XrdMacaroonsHandler.hh"
-
-#include "XrdOuc/XrdOucStream.hh"
-#include "XrdSys/XrdSysE2T.hh"
-
-#include <cerrno>
 
 #include <fcntl.h>
+#include <cerrno>
+
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 
+#include <XrdOuc/XrdOucStream.hh>
+#include <XrdSys/XrdSysE2T.hh>
+
+#include "XrdMacaroonsHandler.hh"
+
+
 using namespace Macaroons;
+
 
 static bool xonmissing(XrdOucStream &config_obj, XrdSysError *log, Handler::AuthzBehavior &behavior)
 {
@@ -92,6 +95,7 @@ bool Handler::Config(const char *config, XrdOucEnv *env, XrdSysError *log,
 
   return success;
 }
+
 
 bool Handler::xtrace(XrdOucStream &Config, XrdSysError *log)
 {
